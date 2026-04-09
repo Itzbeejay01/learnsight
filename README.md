@@ -45,6 +45,18 @@ Extract/copy the downloaded files into `models/` so the directory contains:
 - `random_forest_explainer.pkl`, `xgboost_explainer.pkl`, `lightgbm_explainer.pkl`
 - Optional: `target_encoder.pkl`
 
+### Database setup (creates `instance/learnsight.sqlite`)
+
+There is no separate migration command. The app initializes the SQLite database and creates required tables automatically on startup.
+
+To create the database file:
+
+```bash
+python app.py
+```
+
+After the first run, you should see `instance/learnsight.sqlite` created locally (the `instance/` folder is ignored by git).
+
 ### Run the app
 
 ```bash
