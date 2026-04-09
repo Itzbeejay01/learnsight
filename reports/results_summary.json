@@ -1,0 +1,53 @@
+{
+  "Random Forest": {
+    "accuracy": 0.9078900392716887,
+    "precision_weighted": 0.9078367402105535,
+    "recall_weighted": 0.9078900392716887,
+    "f1_weighted": 0.9074377927096288,
+    "precision_macro": 0.9078908530581855,
+    "recall_macro": 0.9065456587689924,
+    "f1_macro": 0.9067784127184001,
+    "roc_auc_macro_ovr": 0.993040726711937,
+    "roc_auc_weighted_ovr": 0.9930988055610549,
+    "confusion_totals": {
+      "TP": 2543,
+      "FP": 258,
+      "FN": 258,
+      "TN": -258
+    }
+  },
+  "XGBoost": {
+    "accuracy": 0.9096751160299893,
+    "precision_weighted": 0.9095819738710903,
+    "recall_weighted": 0.9096751160299893,
+    "f1_weighted": 0.9094398557070736,
+    "precision_macro": 0.909361807656121,
+    "recall_macro": 0.9083605408924994,
+    "f1_macro": 0.9086672840630581,
+    "roc_auc_macro_ovr": 0.9882539121236702,
+    "roc_auc_weighted_ovr": 0.9883577416658961,
+    "confusion_totals": {
+      "TP": 2548,
+      "FP": 253,
+      "FN": 253,
+      "TN": -253
+    }
+  },
+  "LightGBM": {
+    "accuracy": 0.9303820064262763,
+    "precision_weighted": 0.9303388306451471,
+    "recall_weighted": 0.9303820064262763,
+    "f1_weighted": 0.9300962524181556,
+    "precision_macro": 0.9304462803549458,
+    "recall_macro": 0.9291703429034612,
+    "f1_macro": 0.9295365890835685,
+    "roc_auc_macro_ovr": 0.9923058118569659,
+    "roc_auc_weighted_ovr": 0.9923717441316382,
+    "confusion_totals": {
+      "TP": 2606,
+      "FP": 195,
+      "FN": 195,
+      "TN": -195
+    }
+  }
+}

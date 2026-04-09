@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}LearnSight - Welcome{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-10 mx-auto text-center">
+                <div class="hero-content">
+                    <h1 class="hero-title">
+                        <span class="brand-highlight">LearnSight</span>
+                    </h1>
+                    <p class="hero-subtitle">Explainable AI for Student Performance Prediction</p>
+                    <p class="hero-description">
+                        LearnSight predicts student academic performance using three machine learning models and explains predictions with SHAP.
+                    </p>
+                    <div class="hero-features">
+                        <span class="feature-badge"><i class="fas fa-brain"></i> SHAP Explainability</span>
+                        <span class="feature-badge"><i class="fas fa-chart-line"></i> Multi-Model</span>
+                        <span class="feature-badge"><i class="fas fa-shield-alt"></i> Evidence-Driven</span>
+                    </div>
+                    <div class="mt-4 d-flex justify-content-center gap-3 flex-wrap">
+                        <a href="{{ url_for('input_page') }}" class="btn btn-light btn-lg">
+                            <i class="fas fa-pen-to-square"></i> Start Prediction
+                        </a>
+                        <a href="{{ url_for('history') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-clock-rotate-left"></i> View History
+                        </a>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-muted">Active model: {{ active_model }}</span>
+                        {% if not models_loaded %}
+                            <div class="mt-3 alert alert-warning d-inline-block">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Models not loaded. Please run <code>python3 train_models.py</code>.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-wave">
+        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#F5F7FA"/>
+        </svg>
+    </div>
+</section>
+
+<section class="form-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="form-card">
+                    <div class="form-header">
+                        <h2><i class="fas fa-diagram-project"></i> System Overview</h2>
+                        <p>What LearnSight provides end-to-end</p>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="category-card h-100">
+                                <div class="category-header">
+                                    <span class="category-icon">🧪</span>
+                                    <h3>Model Training</h3>
+                                </div>
+                                <ul class="recommendations-list">
+                                    <li><i class="fas fa-check-circle"></i><span>LightGBM, XGBoost, Random Forest</span></li>
+                                    <li><i class="fas fa-check-circle"></i><span>Stratified split + cross-validation tuning</span></li>
+                                    <li><i class="fas fa-check-circle"></i><span>Reports: accuracy, precision, recall, F1, ROC-AUC</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="category-card h-100">
+                                <div class="category-header">
+                                    <span class="category-icon">🔎</span>
+                                    <h3>Explainability</h3>
+                                </div>
+                                <ul class="recommendations-list">
+                                    <li><i class="fas fa-check-circle"></i><span>Global and local SHAP explanations</span></li>
+                                    <li><i class="fas fa-check-circle"></i><span>Top contributing features per prediction</span></li>
+                                    <li><i class="fas fa-check-circle"></i><span>SHAP plots exported for documentation</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="result-actions mt-4">
+                        <a href="{{ url_for('input_page') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-user-graduate"></i> Go to Input Form
+                        </a>
+                        <a href="{{ url_for('history') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-clock-rotate-left"></i> Prediction History
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

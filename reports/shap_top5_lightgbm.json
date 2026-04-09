@@ -1,0 +1,22 @@
+[
+  {
+    "feature": "num__Exam_Score_Noised",
+    "mean_abs_shap": 3.835999345592731
+  },
+  {
+    "feature": "num__Assignment_Completion",
+    "mean_abs_shap": 0.1826963820279464
+  },
+  {
+    "feature": "num__Engagement_Score",
+    "mean_abs_shap": 0.16668751778059954
+  },
+  {
+    "feature": "num__Study_Attendance_Interaction",
+    "mean_abs_shap": 0.1638699289242312
+  },
+  {
+    "feature": "num__Attendance_Rate",
+    "mean_abs_shap": 0.15613290418931314
+  }
+]

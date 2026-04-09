@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}LearnSight - Prediction Results{% endblock %}
+
+{% block content %}
+<!-- Results Header -->
+<section class="results-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1><i class="fas fa-chart-pie"></i> LearnSight Analysis Results</h1>
+                <p class="lead">AI-Powered Student Performance Prediction</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Prediction Result -->
+<section class="prediction-result">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <!-- Main Result Card -->
+                <div class="result-card main-result">
+                    <div class="result-badge">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h2>Predicted Final Grade</h2>
+                    <div class="grade-display grade-{{ prediction }}">
+                        <span class="grade-letter">{{ prediction }}</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: {{ (probability * 100)|round }}%;"></div>
+                        <span class="confidence-text">Confidence: {{ (probability * 100)|round(1) }}%</span>
+                    </div>
+                </div>
+
+                <!-- Risk Level Card -->
+                <div class="result-card risk-card risk-{{ risk_level.color }}">
+                    <div class="risk-icon">
+                        <i class="fas fa-{{ risk_level.icon }}"></i>
+                    </div>
+                    <div class="risk-content">
+                        <h3>{{ risk_level.level }}</h3>
+                        <p>{{ risk_level.message }}</p>
+                        <div class="risk-score">
+                            <span class="score-label">Performance Score:</span>
+                            <span class="score-value">{{ risk_level.score }}/100</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Insights -->
+                <div class="result-card insights-card">
+                    <h3><i class="fas fa-lightbulb"></i> Key Insights</h3>
+                    <p class="insights-intro">
+                        LearnSight has completed the analysis! This student is predicted to be at 
+                        <strong>{{ risk_level.level }}</strong> because of the following factors:
+                    </p>
+                    
+                    {% if shap_data.positive_factors %}
+                    <div class="factors-section positive-factors">
+                        <h4><i class="fas fa-arrow-up"></i> Top Positive Factors</h4>
+                        <ul class="factors-list">
+                            {% for factor in shap_data.positive_factors[:5] %}
+                            <li>
+                                <span class="factor-name">{{ factor.display_name }}</span>
+                                <span class="factor-value">({{ factor.original_value }})</span>
+                                <span class="factor-impact positive">+{{ "%.3f"|format(factor.value) }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    {% if shap_data.negative_factors %}
+                    <div class="factors-section negative-factors">
+                        <h4><i class="fas fa-arrow-down"></i> Areas of Concern</h4>
+                        <ul class="factors-list">
+                            {% for factor in shap_data.negative_factors[:5] %}
+                            <li>
+                                <span class="factor-name">{{ factor.display_name }}</span>
+                                <span class="factor-value">({{ factor.original_value }})</span>
+                                <span class="factor-impact negative">{{ "%.3f"|format(factor.value) }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Feature Importance Chart -->
+                <div class="result-card chart-card">
+                    <h3><i class="fas fa-chart-bar"></i> Feature Contributions</h3>
+                    <p>This chart shows how each factor contributed to the prediction:</p>
+                    <div id="featureChart" class="feature-chart"></div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="result-card recommendations-card">
+                    <h3><i class="fas fa-clipboard-list"></i> Personalized Recommendations</h3>
+                    <p>Based on the SHAP analysis, here are recommended actions:</p>
+                    <ul class="recommendations-list">
+                        {% for rec in recommendations %}
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>{{ rec }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- SHAP Explanation -->
+                <div class="result-card shap-card">
+                    <h3><i class="fas fa-brain"></i> How LearnSight Explains This Prediction</h3>
+                    <div class="shap-explanation">
+                        <p>
+                            LearnSight uses <strong>SHAP (SHapley Additive exPlanations)</strong> to provide 
+                            transparent, interpretable predictions. Each feature's contribution is calculated 
+                            based on game theory principles, showing exactly how each input influenced the final grade prediction.
+                        </p>
+                        <div class="shap-legend">
+                            <div class="legend-item">
+                                <span class="legend-color positive"></span>
+                                <span>Positive impact (pushes grade higher)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color negative"></span>
+                                <span>Negative impact (pushes grade lower)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="result-actions">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-user-plus"></i> Analyze Another Student
+                    </a>
+                    <a href="{{ url_for('compare') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-chart-bar"></i> View Model Comparison
+                    </a>
+                    <button onclick="window.print()" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Feature importance data for chart
+    var featureData = {{ shap_data.feature_importance|tojson }};
+    
+    // Prepare data for Plotly
+    var features = featureData.map(f => f.display_name);
+    var values = featureData.map(f => f.value);
+    var colors = values.map(v => v >= 0 ? '#28a745' : '#dc3545');
+    
+    // Create horizontal bar chart
+    var trace = {
+        y: features.reverse(),
+        x: values.reverse(),
+        type: 'bar',
+        orientation: 'h',
+        marker: {
+            color: colors.reverse(),
+            line: {
+                color: 'rgba(0,0,0,0.2)',
+                width: 1
+            }
+        },
+        text: values.map(v => (v > 0 ? '+' : '') + v.toFixed(3)),
+        textposition: 'outside',
+        hovertemplate: '<b>%{y}</b><br>Contribution: %{x:.4f}<extra></extra>'
+    };
+    
+    var layout = {
+        margin: { l: 150, r: 50, t: 30, b: 50 },
+        xaxis: {
+            title: 'SHAP Value (Impact on Prediction)',
+            zeroline: true,
+            zerolinecolor: '#333',
+            zerolinewidth: 2
+        },
+        yaxis: {
+            automargin: true
+        },
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        font: {
+            family: 'Inter, sans-serif'
+        },
+        showlegend: false
+    };
+    
+    var config = {
+        responsive: true,
+        displayModeBar: false
+    };
+    
+    Plotly.newPlot('featureChart', [trace], layout, config);
+</script>
+{% endblock %}

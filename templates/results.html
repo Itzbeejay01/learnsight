@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}LearnSight - Results{% endblock %}
+
+{% block content %}
+<section class="results-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1><i class="fas fa-chart-pie"></i> Prediction Results</h1>
+                <p class="lead">Model: {{ model_used }} · ID: {{ prediction_id }} · {{ created_at }}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="prediction-result">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="result-card main-result">
+                    <div class="result-badge">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h2>Predicted Final Grade</h2>
+                    <div class="grade-display grade-{{ prediction }}">
+                        <span class="grade-letter">{{ prediction }}</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: {{ (probability * 100)|round }}%;"></div>
+                        <span class="confidence-text">Confidence: {{ (probability * 100)|round(1) }}%</span>
+                    </div>
+                </div>
+
+                <div class="result-card risk-card risk-{{ risk_level.color }}">
+                    <div class="risk-icon">
+                        <i class="fas fa-{{ risk_level.icon }}"></i>
+                    </div>
+                    <div class="risk-content">
+                        <h3>{{ risk_level.level }}</h3>
+                        <p>{{ risk_level.message }}</p>
+                        <div class="risk-score">
+                            <span class="score-label">Performance Score:</span>
+                            <span class="score-value">{{ risk_level.score }}/100</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card insights-card">
+                    <h3><i class="fas fa-lightbulb"></i> SHAP Key Insights</h3>
+                    <p class="insights-intro">
+                        Top factors that influenced this prediction (positive pushes grade higher, negative pushes grade lower):
+                    </p>
+
+                    {% if shap_data.positive_factors %}
+                    <div class="factors-section positive-factors">
+                        <h4><i class="fas fa-arrow-up"></i> Top Positive Factors</h4>
+                        <ul class="factors-list">
+                            {% for factor in shap_data.positive_factors[:5] %}
+                            <li>
+                                <span class="factor-name">{{ factor.display_name }}</span>
+                                <span class="factor-impact positive">+{{ "%.3f"|format(factor.value) }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if shap_data.negative_factors %}
+                    <div class="factors-section negative-factors">
+                        <h4><i class="fas fa-arrow-down"></i> Areas of Concern</h4>
+                        <ul class="factors-list">
+                            {% for factor in shap_data.negative_factors[:5] %}
+                            <li>
+                                <span class="factor-name">{{ factor.display_name }}</span>
+                                <span class="factor-impact negative">{{ "%.3f"|format(factor.value) }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="result-card chart-card">
+                    <h3><i class="fas fa-chart-bar"></i> Feature Contributions</h3>
+                    <p>SHAP values for the most influential transformed features:</p>
+                    <div id="featureChart" class="feature-chart"></div>
+                </div>
+
+                <div class="result-card recommendations-card">
+                    <h3><i class="fas fa-clipboard-list"></i> Recommendations</h3>
+                    <ul class="recommendations-list">
+                        {% for rec in recommendations %}
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>{{ rec }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="result-actions">
+                    <a href="{{ url_for('input_page') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-user-plus"></i> Analyze Another Student
+                    </a>
+                    <a href="{{ url_for('history') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-clock-rotate-left"></i> View History
+                    </a>
+                    <button onclick="window.print()" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    var featureData = {{ shap_data.feature_importance|tojson }};
+    var features = featureData.map(f => f.display_name);
+    var values = featureData.map(f => f.value);
+    var colors = values.map(v => v >= 0 ? '#28a745' : '#dc3545');
+
+    var trace = {
+        y: features.reverse(),
+        x: values.reverse(),
+        type: 'bar',
+        orientation: 'h',
+        marker: {
+            color: colors.reverse(),
+            line: { color: 'rgba(0,0,0,0.2)', width: 1 }
+        },
+        text: values.map(v => (v > 0 ? '+' : '') + v.toFixed(3)),
+        textposition: 'outside',
+        hovertemplate: '<b>%{y}</b><br>Contribution: %{x:.4f}<extra></extra>'
+    };
+
+    var layout = {
+        margin: { l: 170, r: 40, t: 10, b: 40 },
+        xaxis: { title: 'SHAP Value (Impact on Prediction)', zeroline: true, zerolinecolor: '#333', zerolinewidth: 2 },
+        yaxis: { automargin: true },
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        font: { family: 'Inter, sans-serif' },
+        showlegend: false
+    };
+
+    var config = { responsive: true, displayModeBar: false };
+    Plotly.newPlot('featureChart', [trace], layout, config);
+</script>
+{% endblock %}
+

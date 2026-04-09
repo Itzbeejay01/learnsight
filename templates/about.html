@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}LearnSight - About{% endblock %}
+
+{% block content %}
+<!-- About Header -->
+<section class="about-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1><i class="fas fa-info-circle"></i> About LearnSight</h1>
+                <p class="lead">Empowering Educators with Explainable AI</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Content -->
+<section class="about-content">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                
+                <!-- Mission Statement -->
+                <div class="about-card mission-card">
+                    <div class="mission-icon">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <h2>Our Mission</h2>
+                    <p>
+                        LearnSight was developed with a clear mission: to leverage the power of artificial 
+                        intelligence to help educators identify at-risk students early and understand the 
+                        factors influencing academic outcomes. We believe that by making AI predictions 
+                        transparent and explainable, we can empower educators to make data-informed 
+                        decisions that positively impact student success.
+                    </p>
+                </div>
+
+                <!-- How It Works -->
+                <div class="about-card">
+                    <h2><i class="fas fa-cogs"></i> How LearnSight Works</h2>
+                    <div class="process-steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-icon">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <h4>Data Collection</h4>
+                            <p>
+                                LearnSight analyzes 16 key student features across demographics, 
+                                behavior, psychology, and academic history to build a comprehensive profile.
+                            </p>
+                        </div>
+                        <div class="step-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-icon">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <h4>AI Prediction</h4>
+                            <p>
+                                Our trained machine learning models (Random Forest, XGBoost, LightGBM) 
+                                process the data to predict the student's final grade.
+                            </p>
+                        </div>
+                        <div class="step-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-icon">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <h4>Explainable Insights</h4>
+                            <p>
+                                Using SHAP (SHapley Additive exPlanations), LearnSight reveals exactly 
+                                which factors contributed to the prediction and why.
+                            </p>
+                        </div>
+                        <div class="step-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <div class="step-icon">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <h4>Actionable Recommendations</h4>
+                            <p>
+                                Based on the analysis, LearnSight provides personalized recommendations 
+                                to help educators support each student effectively.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technology Stack -->
+                <div class="about-card">
+                    <h2><i class="fas fa-layer-group"></i> Technology Stack</h2>
+                    <div class="tech-stack">
+                        <div class="tech-category">
+                            <h4><i class="fas fa-server"></i> Backend</h4>
+                            <div class="tech-items">
+                                <span class="tech-badge">Python</span>
+                                <span class="tech-badge">Flask</span>
+                                <span class="tech-badge">scikit-learn</span>
+                                <span class="tech-badge">XGBoost</span>
+                                <span class="tech-badge">LightGBM</span>
+                            </div>
+                        </div>
+                        <div class="tech-category">
+                            <h4><i class="fas fa-brain"></i> Machine Learning</h4>
+                            <div class="tech-items">
+                                <span class="tech-badge">Random Forest</span>
+                                <span class="tech-badge">XGBoost</span>
+                                <span class="tech-badge">LightGBM</span>
+                                <span class="tech-badge highlight">SHAP</span>
+                            </div>
+                        </div>
+                        <div class="tech-category">
+                            <h4><i class="fas fa-desktop"></i> Frontend</h4>
+                            <div class="tech-items">
+                                <span class="tech-badge">HTML5</span>
+                                <span class="tech-badge">CSS3</span>
+                                <span class="tech-badge">JavaScript</span>
+                                <span class="tech-badge">Bootstrap 5</span>
+                                <span class="tech-badge">Plotly</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SHAP Explanation -->
+                <div class="about-card shap-card">
+                    <h2><i class="fas fa-question-circle"></i> What is SHAP?</h2>
+                    <div class="shap-content">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <p>
+                                    <strong>SHAP (SHapley Additive exPlanations)</strong> is a game-theoretic approach 
+                                    to explain the output of any machine learning model. It connects optimal credit 
+                                    allocation with local explanations, providing a unified measure of feature importance.
+                                </p>
+                                <p>
+                                    In LearnSight, SHAP values tell us how much each feature (like study hours, 
+                                    attendance, etc.) contributed to pushing the prediction higher or lower from 
+                                    the baseline. Positive SHAP values push the prediction toward higher grades, 
+                                    while negative values push toward lower grades.
+                                </p>
+                                <div class="shap-benefits">
+                                    <h5>Key Benefits:</h5>
+                                    <ul>
+                                        <li><i class="fas fa-check"></i> Transparent and interpretable predictions</li>
+                                        <li><i class="fas fa-check"></i> Consistent and mathematically grounded</li>
+                                        <li><i class="fas fa-check"></i> Works with any machine learning model</li>
+                                        <li><i class="fas fa-check"></i> Provides both global and local explanations</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="shap-visual">
+                                    <div class="shap-bar positive">
+                                        <span class="shap-label">Study Hours</span>
+                                        <span class="shap-value">+0.45</span>
+                                    </div>
+                                    <div class="shap-bar positive">
+                                        <span class="shap-label">Previous GPA</span>
+                                        <span class="shap-value">+0.32</span>
+                                    </div>
+                                    <div class="shap-bar negative">
+                                        <span class="shap-label">Stress Level</span>
+                                        <span class="shap-value">-0.18</span>
+                                    </div>
+                                    <div class="shap-bar negative">
+                                        <span class="shap-label">Attendance</span>
+                                        <span class="shap-value">-0.12</span>
+                                    </div>
+                                    <div class="shap-base">
+                                        <span>Base Value</span>
+                                        <span>3.2</span>
+                                    </div>
+                                    <div class="shap-final">
+                                        <span>Final Prediction</span>
+                                        <span>3.67</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Use Cases -->
+                <div class="about-card">
+                    <h2><i class="fas fa-tasks"></i> Use Cases & Benefits</h2>
+                    <div class="use-cases">
+                        <div class="use-case">
+                            <div class="use-case-icon">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <h4>Early Intervention</h4>
+                            <p>
+                                Identify at-risk students early in the semester, allowing educators 
+                                to intervene before problems become critical.
+                            </p>
+                        </div>
+                        <div class="use-case">
+                            <div class="use-case-icon">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <h4>Personalized Support</h4>
+                            <p>
+                                Understand the specific factors affecting each student to provide 
+                                targeted, personalized support and resources.
+                            </p>
+                        </div>
+                        <div class="use-case">
+                            <div class="use-case-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h4>Data-Driven Decisions</h4>
+                            <p>
+                                Make informed decisions based on data and AI insights rather than 
+                                intuition alone.
+                            </p>
+                        </div>
+                        <div class="use-case">
+                            <div class="use-case-icon">
+                                <i class="fas fa-hand-holding-heart"></i>
+                            </div>
+                            <h4>Resource Allocation</h4>
+                            <p>
+                                Optimize the allocation of tutoring, counseling, and other support 
+                                resources to students who need them most.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team/Credits -->
+                <div class="about-card team-card">
+                    <h2><i class="fas fa-users"></i> Project Information</h2>
+                    <div class="project-info">
+                        <div class="info-item">
+                            <span class="info-label">Project Name:</span>
+                            <span class="info-value">LearnSight</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Version:</span>
+                            <span class="info-value">1.0.0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Type:</span>
+                            <span class="info-value">Student Academic Performance Prediction System</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Technologies:</span>
+                            <span class="info-value">Python, Flask, Machine Learning, SHAP</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">License:</span>
+                            <span class="info-value">MIT License</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact -->
+                <div class="about-card contact-card">
+                    <h2><i class="fas fa-envelope"></i> Contact & Support</h2>
+                    <div class="contact-content">
+                        <p>
+                            For questions, feedback, or support regarding LearnSight, please reach out 
+                            through the following channels:
+                        </p>
+                        <div class="contact-methods">
+                            <a href="mailto:support@learnsight.edu" class="contact-method">
+                                <i class="fas fa-envelope"></i>
+                                <span>support@learnsight.edu</span>
+                            </a>
+                            <a href="#" class="contact-method">
+                                <i class="fas fa-globe"></i>
+                                <span>www.learnsight.edu</span>
+                            </a>
+                            <a href="#" class="contact-method">
+                                <i class="fab fa-github"></i>
+                                <span>github.com/learnsight</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="about-actions">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-arrow-left"></i> Back to Home
+                    </a>
+                    <a href="{{ url_for('compare') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-chart-bar"></i> View Model Comparison
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

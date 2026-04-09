@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}LearnSight - History{% endblock %}
+
+{% block content %}
+<section class="results-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 mx-auto text-center">
+                <h1><i class="fas fa-clock-rotate-left"></i> Prediction History</h1>
+                <p class="lead">Saved predictions and SHAP analyses</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="prediction-result">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="result-card">
+                    {% if records and records|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Timestamp</th>
+                                        <th>Model</th>
+                                        <th>Prediction</th>
+                                        <th>Confidence</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for r in records %}
+                                    <tr>
+                                        <td><strong>#{{ r.id }}</strong></td>
+                                        <td>{{ r.created_at }}</td>
+                                        <td>{{ r.model_name }}</td>
+                                        <td><span class="badge text-bg-primary">{{ r.prediction_label }}</span></td>
+                                        <td>{{ (r.confidence * 100)|round(1) }}%</td>
+                                        <td class="text-end">
+                                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('results', prediction_id=r.id) }}">
+                                                View Results
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="mb-3">No saved predictions yet.</p>
+                            <a href="{{ url_for('input_page') }}" class="btn btn-primary">
+                                <i class="fas fa-user-graduate"></i> Make a Prediction
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

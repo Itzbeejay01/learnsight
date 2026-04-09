@@ -1,0 +1,17 @@
+{
+  "accuracy": 0.9600142806140664,
+  "precision_weighted": 0.9599953227764585,
+  "recall_weighted": 0.9600142806140664,
+  "f1_weighted": 0.9599758144090053,
+  "precision_macro": 0.9597726309610153,
+  "recall_macro": 0.9595069265181448,
+  "f1_macro": 0.9596094753817018,
+  "roc_auc_macro_ovr": 0.9979634871260266,
+  "roc_auc_weighted_ovr": 0.9979769395179964,
+  "confusion_totals": {
+    "TP": 2689,
+    "FP": 112,
+    "FN": 112,
+    "TN": -112
+  }
+}

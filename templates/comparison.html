@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}LearnSight - Model Comparison{% endblock %}
+
+{% block content %}
+<!-- Comparison Header -->
+<section class="comparison-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1><i class="fas fa-chart-bar"></i> Model Performance Comparison</h1>
+                <p class="lead">Comparing LearnSight's Machine Learning Models</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Comparison Content -->
+<section class="comparison-content">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                
+                <!-- Best Model Banner -->
+                <div class="best-model-banner">
+                    <div class="banner-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="banner-content">
+                        <h3>Best Performing Model</h3>
+                        <div class="best-model-name">{{ comparison.best_model }}</div>
+                        <p>Selected based on highest average performance across all metrics</p>
+                    </div>
+                </div>
+
+                <!-- Metrics Table -->
+                <div class="comparison-card">
+                    <h3><i class="fas fa-table"></i> Performance Metrics</h3>
+                    <div class="table-responsive">
+                        <table class="table comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>Accuracy</th>
+                                    <th>Precision</th>
+                                    <th>Recall</th>
+                                    <th>F1-Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for model in comparison.models %}
+                                <tr class="{% if model == comparison.best_model %}best-row{% endif %}">
+                                    <td>
+                                        <strong>{{ model }}</strong>
+                                        {% if model == comparison.best_model %}
+                                        <span class="best-badge"><i class="fas fa-star"></i> Best</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ "%.4f"|format(comparison.metrics.Accuracy[loop.index0]) }}</td>
+                                    <td>{{ "%.4f"|format(comparison.metrics.Precision[loop.index0]) }}</td>
+                                    <td>{{ "%.4f"|format(comparison.metrics.Recall[loop.index0]) }}</td>
+                                    <td>{{ "%.4f"|format(comparison.metrics.F1-Score[loop.index0]) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="comparison-card chart-card">
+                            <h3><i class="fas fa-chart-column"></i> Accuracy Comparison</h3>
+                            <div id="accuracyChart" class="metric-chart"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="comparison-card chart-card">
+                            <h3><i class="fas fa-chart-column"></i> F1-Score Comparison</h3>
+                            <div id="f1Chart" class="metric-chart"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Full Metrics Chart -->
+                <div class="comparison-card">
+                    <h3><i class="fas fa-chart-radar"></i> Complete Metrics Overview</h3>
+                    <div id="radarChart" class="radar-chart"></div>
+                </div>
+
+                <!-- Why XGBoost -->
+                <div class="comparison-card why-card">
+                    <h3><i class="fas fa-question-circle"></i> Why {{ comparison.best_model }}?</h3>
+                    <div class="why-content">
+                        <p>
+                            {{ comparison.best_model }} was selected as the primary model for LearnSight based on 
+                            comprehensive evaluation across multiple performance metrics:
+                        </p>
+                        <ul class="why-list">
+                            {% for reason in comparison.why_chosen %}
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>{{ reason }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Model Descriptions -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="model-info-card">
+                            <div class="model-icon rf">
+                                <i class="fas fa-tree"></i>
+                            </div>
+                            <h4>Random Forest</h4>
+                            <p>
+                                An ensemble learning method that constructs multiple decision trees 
+                                and outputs the mode of their predictions. Known for robustness and 
+                                resistance to overfitting.
+                            </p>
+                            <div class="model-pros">
+                                <span class="pro-tag">Robust</span>
+                                <span class="pro-tag">Interpretable</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="model-info-card best">
+                            <div class="model-icon xgb">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <h4>XGBoost <i class="fas fa-crown"></i></h4>
+                            <p>
+                                Extreme Gradient Boosting is an optimized distributed gradient 
+                                boosting library designed for speed and performance. Uses regularization 
+                                to prevent overfitting.
+                            </p>
+                            <div class="model-pros">
+                                <span class="pro-tag">Fast</span>
+                                <span class="pro-tag">Accurate</span>
+                                <span class="pro-tag">Best Overall</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="model-info-card">
+                            <div class="model-icon lgb">
+                                <i class="fas fa-leaf"></i>
+                            </div>
+                            <h4>LightGBM</h4>
+                            <p>
+                                A gradient boosting framework that uses tree-based learning algorithms. 
+                                Designed for distributed and efficient training with large datasets.
+                            </p>
+                            <div class="model-pros">
+                                <span class="pro-tag">Efficient</span>
+                                <span class="pro-tag">Scalable</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="comparison-actions">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-arrow-left"></i> Back to Prediction
+                    </a>
+                    <a href="{{ url_for('about') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-info-circle"></i> Learn More
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Model comparison data
+    var models = {{ comparison.models|tojson }};
+    var accuracy = {{ comparison.metrics.Accuracy|tojson }};
+    var precision = {{ comparison.metrics.Precision|tojson }};
+    var recall = {{ comparison.metrics.Recall|tojson }};
+    var f1Score = {{ comparison.metrics['F1-Score']|tojson }};
+    var bestModel = {{ comparison.best_model|tojson }};
+    
+    // Colors for each model
+    var colors = ['#4CAF50', '#2C3E95', '#FF9800'];
+    var bestColor = '#FFD700';
+    
+    // Accuracy Chart
+    var accuracyTrace = {
+        x: models,
+        y: accuracy,
+        type: 'bar',
+        marker: {
+            color: models.map(m => m === bestModel ? '#2C3E95' : '#6c757d'),
+            line: {
+                color: models.map(m => m === bestModel ? '#1a237e' : '#495057'),
+                width: 2
+            }
+        },
+        text: accuracy.map(a => (a * 100).toFixed(2) + '%'),
+        textposition: 'auto',
+        hovertemplate: '<b>%{x}</b><br>Accuracy: %{y:.4f}<extra></extra>'
+    };
+    
+    var accuracyLayout = {
+        margin: { t: 20, r: 20, b: 40, l: 50 },
+        yaxis: {
+            title: 'Accuracy',
+            range: [0, 1],
+            tickformat: '.0%'
+        },
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        font: { family: 'Inter, sans-serif' }
+    };
+    
+    Plotly.newPlot('accuracyChart', [accuracyTrace], accuracyLayout, {responsive: true, displayModeBar: false});
+    
+    // F1-Score Chart
+    var f1Trace = {
+        x: models,
+        y: f1Score,
+        type: 'bar',
+        marker: {
+            color: models.map(m => m === bestModel ? '#2C3E95' : '#6c757d'),
+            line: {
+                color: models.map(m => m === bestModel ? '#1a237e' : '#495057'),
+                width: 2
+            }
+        },
+        text: f1Score.map(f => (f * 100).toFixed(2) + '%'),
+        textposition: 'auto',
+        hovertemplate: '<b>%{x}</b><br>F1-Score: %{y:.4f}<extra></extra>'
+    };
+    
+    var f1Layout = {
+        margin: { t: 20, r: 20, b: 40, l: 50 },
+        yaxis: {
+            title: 'F1-Score',
+            range: [0, 1],
+            tickformat: '.0%'
+        },
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        font: { family: 'Inter, sans-serif' }
+    };
+    
+    Plotly.newPlot('f1Chart', [f1Trace], f1Layout, {responsive: true, displayModeBar: false});
+    
+    // Radar Chart
+    var radarData = models.map((model, i) => ({
+        type: 'scatterpolar',
+        r: [accuracy[i], precision[i], recall[i], f1Score[i], accuracy[i]],
+        theta: ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'Accuracy'],
+        fill: 'toself',
+        name: model,
+        line: {
+            color: model === bestModel ? '#2C3E95' : ['#4CAF50', '#FF9800'][i % 2],
+            width: model === bestModel ? 3 : 2
+        },
+        marker: {
+            size: model === bestModel ? 8 : 6
+        }
+    }));
+    
+    var radarLayout = {
+        polar: {
+            radialaxis: {
+                visible: true,
+                range: [0, 1],
+                tickformat: '.0%'
+            }
+        },
+        showlegend: true,
+        legend: {
+            x: 0.5,
+            y: -0.1,
+            xanchor: 'center',
+            orientation: 'h'
+        },
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        font: { family: 'Inter, sans-serif' },
+        margin: { t: 50, r: 80, b: 80, l: 80 }
+    };
+    
+    Plotly.newPlot('radarChart', radarData, radarLayout, {responsive: true, displayModeBar: false});
+</script>
+{% endblock %}

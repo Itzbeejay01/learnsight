@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}LearnSight - Predict Student Performance{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mx-auto text-center">
+                <div class="hero-content">
+                    <h1 class="hero-title">
+                        <span class="brand-highlight">LearnSight</span>
+                    </h1>
+                    <p class="hero-subtitle">Predict Student Performance with Explainable AI</p>
+                    <p class="hero-description">
+                        Welcome to LearnSight - Where AI Meets Educational Insight. 
+                        Our advanced machine learning models analyze student data to predict 
+                        academic performance and provide actionable insights for educators.
+                    </p>
+                    <div class="hero-features">
+                        <span class="feature-badge"><i class="fas fa-brain"></i> AI-Powered</span>
+                        <span class="feature-badge"><i class="fas fa-chart-line"></i> Explainable</span>
+                        <span class="feature-badge"><i class="fas fa-shield-alt"></i> Privacy-Focused</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-wave">
+        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#F5F7FA"/>
+        </svg>
+    </div>
+</section>
+
+<!-- Form Section -->
+<section class="form-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="form-card">
+                    <div class="form-header">
+                        <h2><i class="fas fa-user-graduate"></i> Student Information</h2>
+                        <p>Enter student details below for LearnSight analysis</p>
+                    </div>
+                    
+                    {% if not models_loaded %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Models not loaded!</strong> Please run <code>python train_models.py</code> first to train the models.
+                    </div>
+                    {% endif %}
+                    
+                    <form id="predictionForm" action="{{ url_for('predict') }}" method="POST" {% if not models_loaded %}onsubmit="return false;"{% endif %}>
+                        
+                        <!-- Demographics -->
+                        <div class="category-card">
+                            <div class="category-header">
+                                <span class="category-icon">📊</span>
+                                <h3>Demographics</h3>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="Age">
+                                            Age <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Age }}"></i>
+                                        </label>
+                                        <input type="number" class="form-control" id="Age" name="Age" 
+                                               min="18" max="30" required 
+                                               placeholder="e.g., 21"
+                                               value="{{ form_data.Age if form_data else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="Gender">
+                                            Gender <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Gender }}"></i>
+                                        </label>
+                                        <select class="form-select" id="Gender" name="Gender" required>
+                                            <option value="">Select Gender</option>
+                                            {% for option in categorical_options.Gender %}
+                                            <option value="{{ option }}" {% if form_data and form_data.Gender == option %}selected{% endif %}>{{ option }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Behavioral Factors -->
+                        <div class="category-card">
+                            <div class="category-header">
+                                <span class="category-icon">📚</span>
+                                <h3>Behavioral Factors</h3>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="Study_Hours">
+                                            Study Hours per Week <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Study_Hours }}"></i>
+                                        </label>
+                                        <input type="number" class="form-control" id="Study_Hours" name="Study_Hours" 
+                                               min="0" max="50" step="0.1" required 
+                                               placeholder="e.g., 15.5"
+                                               value="{{ form_data.Study_Hours if form_data else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="Attendance_Rate">
+                                            Attendance Rate (%) <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Attendance_Rate }}"></i>
+                                        </label>
+                                        <input type="number" class="form-control" id="Attendance_Rate" name="Attendance_Rate" 
+                                               min="0" max="100" step="0.1" required 
+                                               placeholder="e.g., 85.0"
+                                               value="{{ form_data.Attendance_Rate if form_data else '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="Assignment_Completion">
+                                            Assignment Completion (%) <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Assignment_Completion }}"></i>
+                                        </label>
+                                        <input type="number" class="form-control" id="Assignment_Completion" name="Assignment_Completion" 
+                                               min="0" max="100" step="0.1" required 
+                                               placeholder="e.g., 90.0"
+                                               value="{{ form_data.Assignment_Completion if form_data else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="Discussion_Participation">
+                                            Discussion Participation (%) <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Discussion_Participation }}"></i>
+                                        </label>
+                                        <input type="number" class="form-control" id="Discussion_Participation" name="Discussion_Participation" 
+                                               min="0" max="100" step="0.1" required 
+                                               placeholder="e.g., 75.0"
+                                               value="{{ form_data.Discussion_Participation if form_data else '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Psychological Factors -->
+                        <div class="category-card">
+                            <div class="category-header">
+                                <span class="category-icon">🧠</span>
+                                <h3>Psychological Factors</h3>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="Motivation_Level">
+                                            Motivation Level <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Motivation_Level }}"></i>
+                                        </label>
+                                        <select class="form-select" id="Motivation_Level" name="Motivation_Level" required>
+                                            <option value="">Select Level</option>
+                                            {% for option in categorical_options.Motivation_Level %}
+                                            <option value="{{ option }}" {% if form_data and form_data.Motivation_Level == option %}selected{% endif %}>{{ option }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="Stress_Level">
+                                            Stress Level <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Stress_Level }}"></i>
+                                        </label>
+                                        <select class="form-select" id="Stress_Level" name="Stress_Level" required>
+                                            <option value="">Select Level</option>
+                                            {% for option in categorical_options.Stress_Level %}
+                                            <option value="{{ option }}" {% if form_data and form_data.Stress_Level == option %}selected{% endif %}>{{ option }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contextual Factors -->
+                        <div class="category-card">
+                            <div class="category-header">
+                                <span class="category-icon">🌍</span>
+                                <h3>Contextual Factors</h3>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="Access_to_Resources">
+                                            Access to Resources <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Access_to_Resources }}"></i>
+                                        </label>
+                                        <select class="form-select" id="Access_to_Resources" name="Access_to_Resources" required>
+                                            <option value="">Select Level</option>
+                                            {% for option in categorical_options.Access_to_Resources %}
+                                            <option value="{{ option }}" {% if form_data and form_data.Access_to_Resources == option %}selected{% endif %}>{{ option }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="Learning_Style">
+                                            Learning Style <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Learning_Style }}"></i>
+                                        </label>
+                                        <select class="form-select" id="Learning_Style" name="Learning_Style" required>
+                                            <option value="">Select Style</option>
+                                            {% for option in categorical_options.Learning_Style %}
+                                            <option value="{{ option }}" {% if form_data and form_data.Learning_Style == option %}selected{% endif %}>{{ option }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Academic History -->
+                        <div class="category-card">
+                            <div class="category-header">
+                                <span class="category-icon">🎓</span>
+                                <h3>Academic History</h3>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="Previous_GPA">
+                                            Previous GPA <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Previous_GPA }}"></i>
+                                        </label>
+                                        <input type="number" class="form-control" id="Previous_GPA" name="Previous_GPA" 
+                                               min="1.0" max="4.0" step="0.01" required 
+                                               placeholder="e.g., 3.5"
+                                               value="{{ form_data.Previous_GPA if form_data else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="Midterm_Score">
+                                            Midterm Score <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Midterm_Score }}"></i>
+                                        </label>
+                                        <input type="number" class="form-control" id="Midterm_Score" name="Midterm_Score" 
+                                               min="0" max="100" step="0.1" required 
+                                               placeholder="e.g., 78.5"
+                                               value="{{ form_data.Midterm_Score if form_data else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="Quiz_Scores">
+                                            Quiz Scores (Avg) <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Quiz_Scores }}"></i>
+                                        </label>
+                                        <input type="number" class="form-control" id="Quiz_Scores" name="Quiz_Scores" 
+                                               min="0" max="100" step="0.1" required 
+                                               placeholder="e.g., 82.0"
+                                               value="{{ form_data.Quiz_Scores if form_data else '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Engagement Metrics -->
+                        <div class="category-card">
+                            <div class="category-header">
+                                <span class="category-icon">💻</span>
+                                <h3>Engagement Metrics</h3>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="Library_Visits">
+                                            Library Visits/Month <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Library_Visits }}"></i>
+                                        </label>
+                                        <input type="number" class="form-control" id="Library_Visits" name="Library_Visits" 
+                                               min="0" max="20" required 
+                                               placeholder="e.g., 8"
+                                               value="{{ form_data.Library_Visits if form_data else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="Online_Forum_Activity">
+                                            Online Forum Activity (%) <i class="fas fa-question-circle" data-bs-toggle="tooltip" title="{{ feature_descriptions.Online_Forum_Activity }}"></i>
+                                        </label>
+                                        <input type="number" class="form-control" id="Online_Forum_Activity" name="Online_Forum_Activity" 
+                                               min="0" max="100" step="0.1" required 
+                                               placeholder="e.g., 60.0"
+                                               value="{{ form_data.Online_Forum_Activity if form_data else '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary btn-lg" {% if not models_loaded %}disabled{% endif %}>
+                                <i class="fas fa-chart-line"></i> Analyze Performance
+                            </button>
+                            <button type="reset" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-undo"></i> Clear Form
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+        </div>
+        <h3>LearnSight is analyzing...</h3>
+        <p>Our AI is processing student data and generating insights</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form submission handling
+    document.getElementById('predictionForm').addEventListener('submit', function(e) {
+        // Show loading overlay
+        document.getElementById('loadingOverlay').classList.add('active');
+    });
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+</script>
+{% endblock %}
