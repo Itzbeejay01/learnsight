@@ -33,7 +33,7 @@ pip install -r requirements.txt
 
 Model artifacts are intentionally not tracked in this repository (see `.gitignore`). Download the latest trained artifacts from Google Drive:
 
-- Google Drive (models): https://drive.google.com/REPLACE_WITH_LINK
+- Google Drive (models): https://drive.google.com/drive/folders/1BTQQwfAxxZkzprA1OZ867Xelork2AmkT?usp=sharing
 
 Extract/copy the downloaded files into `models/` so the directory contains:
 
