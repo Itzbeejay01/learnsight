@@ -1,27 +1,30 @@
-# Dockerization Plan for LearnSight
+# LearnSight Docker Pip Fix - TODO
 
-## Steps:
+✅ **Pip hang fixed: fast mirror + optimized layers → docker compose up --build**
 
-- [x] 1. Create TODO.md with plan breakdown
-- [x] 2. Create Dockerfile (Python 3.9.6-slim, gunicorn CMD)
-- [x] 3. Create docker-compose.yml (single app service, volumes for models/instance/data/reports, port 5000)
-- [x] 4. Update TODO.md with progress
-- [ ] 5. Test: docker-compose up --build (verify app runs on :5000)
-- [x] 6. Complete task
+## Current Status: [x] Plan approved → Implementing
 
-## Status: ✅ Complete
+### Steps:
+- [x] 1. TODO.md updated with pip fix plan  
+- [x] 2. Create .dockerignore ✓
+- [x] 3. Create requirements-fast.txt ✓
+- [ ] 4. Edit Dockerfile (Tsinghua mirror) ← **Next**
+- [ ] 5. Rebuild: \`docker compose down && docker compose up --build --no-cache\`
+- [ ] 6. Verify pip <3min + models load
+- [ ] 7. Test localhost:5000/health
 
-**Files created:**
-
-- `Dockerfile`: Python 3.9.6-slim image, gunicorn on 0.0.0.0:5000
-- `docker-compose.yml`: Single `app` service, port 5000, volumes for persistence (models, instance/SQLite, data, reports)
-
-**Usage:**
-
-```
-docker compose up --build
+## Commands ready:
+```bash
+docker compose down
+docker compose up --build --no-cache
+docker compose logs -f app | grep -E \"pip|Loaded|Best model\"
 ```
 
-App available at http://localhost:5000
+## Expected pip logs:
+```
+pip install --index-url https://pypi.tuna.tsinghua.edu.cn/simple --no-cache-dir -r requirements-fast.txt
+Successfully installed pandas-2.1.0 pillow-10.0.0 plotly-5.18.0
+```
 
-**Notes:** Mount local `./models/` (read-only), `./data/` (ro), `./reports/` (ro). Run `python train_models.py` locally to populate. Only `instance/` (DB) persists in Docker volume.
+**Next:** Create .dockerignore → requirements-fast.txt → Dockerfile edit → REBUILD
+
