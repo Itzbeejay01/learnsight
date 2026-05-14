@@ -139,23 +139,45 @@ def init_db():
                 probabilities_json TEXT NOT NULL,
                 risk_json TEXT NOT NULL,
                 shap_json TEXT NOT NULL,
-                recommendations_json TEXT NOT NULL
+                recommendations_json TEXT NOT NULL,
+                ensemble_json TEXT,
+                model_predictions_json TEXT
             )
             """
         )
+        existing_columns = {
+            row[1] for row in db.execute("PRAGMA table_info(predictions)").fetchall()
+        }
+        if "ensemble_json" not in existing_columns:
+            db.execute("ALTER TABLE predictions ADD COLUMN ensemble_json TEXT")
+        if "model_predictions_json" not in existing_columns:
+            db.execute("ALTER TABLE predictions ADD COLUMN model_predictions_json TEXT")
         db.commit()
     finally:
         db.close()
 
 
-def save_prediction_record(model_name, form_data, prediction_label, prediction_index, confidence, probabilities, risk_level, shap_data, recommendations):
+def save_prediction_record(
+    model_name,
+    form_data,
+    prediction_label,
+    prediction_index,
+    confidence,
+    probabilities,
+    risk_level,
+    shap_data,
+    recommendations,
+    ensemble_details=None,
+    model_predictions=None,
+):
     db = get_db()
     cur = db.execute(
         """
         INSERT INTO predictions (
             created_at, model_name, inputs_json, prediction_label, prediction_index,
-            confidence, probabilities_json, risk_json, shap_json, recommendations_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            confidence, probabilities_json, risk_json, shap_json, recommendations_json,
+            ensemble_json, model_predictions_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             datetime.utcnow().isoformat(),
@@ -168,6 +190,8 @@ def save_prediction_record(model_name, form_data, prediction_label, prediction_i
             json.dumps(risk_level),
             json.dumps(shap_data),
             json.dumps(recommendations),
+            json.dumps(ensemble_details or {}),
+            json.dumps(model_predictions or []),
         ),
     )
     db.commit()
@@ -185,6 +209,8 @@ def get_prediction_record(prediction_id):
     rec["risk_level"] = json.loads(rec["risk_json"])
     rec["shap_data"] = json.loads(rec["shap_json"])
     rec["recommendations"] = json.loads(rec["recommendations_json"])
+    rec["ensemble"] = json.loads(rec["ensemble_json"]) if rec.get("ensemble_json") else {}
+    rec["model_predictions"] = json.loads(rec["model_predictions_json"]) if rec.get("model_predictions_json") else []
     return rec
 
 
@@ -356,6 +382,76 @@ def get_risk_level(predicted_grade):
             'icon': 'check-circle',
             'message': 'This student is performing well and on track for success.'
         }
+
+
+def decode_prediction_label(prediction_numeric):
+    if target_encoder is None:
+        return str(prediction_numeric)
+    return target_encoder.inverse_transform([prediction_numeric])[0]
+
+
+def encode_prediction_label(prediction_label):
+    if target_encoder is None:
+        return prediction_label
+    return int(target_encoder.transform([prediction_label])[0])
+
+
+def build_model_prediction(model_name, model, X_transformed):
+    prediction_numeric = model.predict(X_transformed)[0]
+    prediction_label = decode_prediction_label(prediction_numeric)
+
+    if hasattr(model, 'predict_proba'):
+        probabilities = model.predict_proba(X_transformed)[0]
+        prob_dict = {
+            decode_prediction_label(cls): float(prob)
+            for cls, prob in zip(model.classes_, probabilities)
+        }
+        confidence = max(prob_dict.values()) if prob_dict else 0.0
+    else:
+        prob_dict = {prediction_label: 1.0}
+        confidence = 1.0
+
+    return {
+        'model_name': model_name,
+        'prediction_index': int(prediction_numeric),
+        'prediction_label': prediction_label,
+        'confidence': float(confidence),
+        'probabilities': prob_dict,
+    }
+
+
+def build_ensemble_prediction(model_predictions):
+    if not model_predictions:
+        raise ValueError('No model predictions available for ensemble verdict.')
+
+    label_votes = {}
+    aggregated_probabilities = {}
+
+    for pred in model_predictions:
+        label = pred['prediction_label']
+        label_votes[label] = label_votes.get(label, 0) + 1
+        for cls_label, prob in pred['probabilities'].items():
+            aggregated_probabilities[cls_label] = aggregated_probabilities.get(cls_label, 0.0) + float(prob)
+
+    model_count = len(model_predictions)
+    averaged_probabilities = {
+        cls_label: total_prob / model_count
+        for cls_label, total_prob in aggregated_probabilities.items()
+    }
+    prediction_label = max(
+        averaged_probabilities,
+        key=lambda label: (label_votes.get(label, 0), averaged_probabilities[label])
+    )
+
+    return {
+        'prediction_label': prediction_label,
+        'prediction_index': encode_prediction_label(prediction_label),
+        'confidence': float(averaged_probabilities.get(prediction_label, 0.0)),
+        'probabilities': averaged_probabilities,
+        'votes': label_votes,
+        'models_used': [pred['model_name'] for pred in model_predictions],
+        'strategy': 'majority_vote_with_average_probability_tiebreak',
+    }
 
 
 def _display_feature_name(name):
@@ -579,33 +675,34 @@ def predict():
         # Preprocess input
         raw_df, X_t = preprocess_input(form_data)
         
-        # Make prediction (returns numeric class)
-        prediction_numeric = best_model.predict(X_t)[0]
-        
-        # Decode prediction to grade letter
-        prediction = target_encoder.inverse_transform([prediction_numeric])[0]
-        
-        # Get prediction probabilities if available
-        if hasattr(best_model, 'predict_proba'):
-            probabilities = best_model.predict_proba(X_t)[0]
-            prob_dict = {target_encoder.inverse_transform([cls])[0]: float(prob) 
-                        for cls, prob in zip(best_model.classes_, probabilities)}
-            top_prob = max(prob_dict.values())
-        else:
-            prob_dict = {prediction: 1.0}
-            top_prob = 1.0
-        
-        # Determine risk level
+        model_predictions = [
+            build_model_prediction(model_name, model, X_t)
+            for model_name, model in models.items()
+        ]
+        ensemble_prediction = build_ensemble_prediction(model_predictions)
+        best_model_prediction = next(
+            (pred for pred in model_predictions if pred['model_name'] == best_model_name),
+            model_predictions[0]
+        )
+
+        prediction = ensemble_prediction['prediction_label']
+        prediction_numeric = ensemble_prediction['prediction_index']
+        prob_dict = ensemble_prediction['probabilities']
+        top_prob = ensemble_prediction['confidence']
+
+        # Determine risk level from ensemble verdict
         risk_level = get_risk_level(prediction)
         
-        # Generate SHAP explanation
-        shap_data = generate_shap_visualization(X_t, prediction_numeric)
+        # Keep SHAP on the best model while the final verdict comes from the ensemble
+        shap_data = generate_shap_visualization(X_t, best_model_prediction['prediction_index'])
+        shap_data['explanation_model'] = best_model_prediction['model_name']
+        shap_data['explanation_prediction'] = best_model_prediction['prediction_label']
         
         # Generate recommendations
         recommendations = generate_recommendations(shap_data, risk_level)
 
         prediction_id = save_prediction_record(
-            model_name=best_model_name,
+            model_name='Ensemble',
             form_data=form_data,
             prediction_label=prediction,
             prediction_index=int(prediction_numeric),
@@ -614,6 +711,8 @@ def predict():
             risk_level=risk_level,
             shap_data=shap_data,
             recommendations=recommendations,
+            ensemble_details=ensemble_prediction,
+            model_predictions=model_predictions,
         )
 
         return redirect(url_for('results', prediction_id=prediction_id))
@@ -643,6 +742,8 @@ def results(prediction_id):
         created_at=rec['created_at'],
         model_used=rec['model_name'],
         probabilities=rec['probabilities'],
+        ensemble=rec['ensemble'],
+        model_predictions=rec['model_predictions'],
     )
 
 
@@ -703,31 +804,32 @@ def api_predict():
         # Preprocess input
         raw_df, X_t = preprocess_input(data)
         
-        # Make prediction (returns numeric class)
-        prediction_numeric = best_model.predict(X_t)[0]
-        
-        # Decode prediction to grade letter
-        prediction = target_encoder.inverse_transform([prediction_numeric])[0]
-        
-        # Get probabilities
-        if hasattr(best_model, 'predict_proba'):
-            probabilities = best_model.predict_proba(X_t)[0]
-            prob_dict = {target_encoder.inverse_transform([cls])[0]: float(prob) 
-                        for cls, prob in zip(best_model.classes_, probabilities)}
-        else:
-            prob_dict = {prediction: 1.0}
+        model_predictions = [
+            build_model_prediction(model_name, model, X_t)
+            for model_name, model in models.items()
+        ]
+        ensemble_prediction = build_ensemble_prediction(model_predictions)
+        best_model_prediction = next(
+            (pred for pred in model_predictions if pred['model_name'] == best_model_name),
+            model_predictions[0]
+        )
+
+        prediction = ensemble_prediction['prediction_label']
+        prob_dict = ensemble_prediction['probabilities']
         
         # Get risk level
         risk_level = get_risk_level(prediction)
         
-        # Generate SHAP explanation (use numeric for SHAP)
-        shap_data = generate_shap_visualization(X_t, prediction_numeric)
+        # Generate SHAP explanation from the best model
+        shap_data = generate_shap_visualization(X_t, best_model_prediction['prediction_index'])
+        shap_data['explanation_model'] = best_model_prediction['model_name']
+        shap_data['explanation_prediction'] = best_model_prediction['prediction_label']
         
         # Build response
         response = {
             'success': True,
             'prediction': prediction,
-            'confidence': float(max(prob_dict.values())),
+            'confidence': float(ensemble_prediction['confidence']),
             'probabilities': prob_dict,
             'risk_level': risk_level,
             'shap_values': shap_data.get('feature_importance', []),
@@ -739,7 +841,10 @@ def api_predict():
                 {'feature': f['feature'], 'contribution': f['value']}
                 for f in shap_data.get('negative_factors', [])
             ],
-            'model_used': best_model_name,
+            'model_used': 'Ensemble',
+            'ensemble': ensemble_prediction,
+            'individual_model_predictions': model_predictions,
+            'explanation_model': best_model_prediction['model_name'],
             'timestamp': datetime.now().isoformat()
         }
         
